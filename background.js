@@ -69,7 +69,9 @@ const readState = () => {
 
 let lastInterval;
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+const tabMap = {};
+
+const trackTime = tab => {
   console.log('tab', tab);
   clearInterval(lastInterval);
 
@@ -111,6 +113,19 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       }
     }
   });
+};
+
+// Called when the user clicks on the browser action.
+chrome.tabs.onSelectionChanged.addListener((tabId, selectionInfo) => {
+  console.log('tabId', tabId);
+  chrome.tabs.get(tabId, tab => {
+    trackTime(tab);
+  });
+});
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  tabMap[tabId] = tab;
+  trackTime(tab);
 });
 
 chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
