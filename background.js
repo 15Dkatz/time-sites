@@ -1,3 +1,7 @@
+// TODOs:
+// * Make the SITE_TIME_MAP editable by the user
+// * add manifest icons
+
 const bakeCookie = (name, value, date) => {
   let expirey = date instanceof Date ? '; expires='+date : null
   var cookie = [name, '=', JSON.stringify(value), '; domain_.', window.location.host.toString(), '; path=/;',expirey].join('');
@@ -16,7 +20,7 @@ const deleteCookie = name => {
 }
 
 const updateFilters = (urls, clear = false) => {
-  const blockRequestCallback = details => ({ cancel: true });
+  const blockRequestCallback = () => ({ cancel: true });
 
   if (clear) {
     if(chrome.webRequest.onBeforeRequest.hasListener(blockRequestCallback)) {
