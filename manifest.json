@@ -1,0 +1,21 @@
+{
+  "name": "Time Sites",
+  "version": "1.0",
+  "description": "Limit usage of distracting websites",
+  "permissions": [
+    "tabs",
+    "webRequest",
+    "http://*/*",
+    "https://*/*",
+    "activeTab",
+    "webRequestBlocking"
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "page_action": {
+    "default_popup": "popup.html"
+  },
+  "manifest_version": 2
+}
