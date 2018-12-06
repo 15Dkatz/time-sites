@@ -1,7 +1,3 @@
-// TODOs:
-// * Make the SITE_TIME_MAP editable by the user
-// * add manifest icons
-
 const bakeCookie = (name, value, date) => {
   let expirey = date instanceof Date ? '; expires='+date : null
   var cookie = [name, '=', JSON.stringify(value), '; domain_.', window.location.host.toString(), '; path=/;',expirey].join('');
@@ -49,7 +45,7 @@ const PERIOD = 1000;
 
 const STATE_COOKIE = 'STATE_COOKIE_FOO1234';
 
-bakeCookie(STATE_COOKIE, JSON.stringify({ currentDay: new Date().getUTCDay() }));
+bakeCookie(STATE_COOKIE, JSON.stringify({ currentDay: new Date().getDay() }));
 let GIANT_STATE = JSON.parse(readCookie(STATE_COOKIE));
 
 console.log('GIANT_STATE', GIANT_STATE);
@@ -84,7 +80,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (tabUrl.includes(siteKey)) {
       let state = readState();
 
-      const currentDay = new Date().getUTCDay()
+      const currentDay = new Date().getDay()
 
       if (state.currentDay != currentDay) {
         // New day: inblock the sites
