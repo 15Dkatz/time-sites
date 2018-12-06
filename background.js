@@ -27,83 +27,95 @@ const updateFilters = (urls, clear = false) => {
   }
 }
 
-const ORIGIN_TIME_MAP = {
+const SECONDS = 1000;
+const MINUTES = 60 * SECONDS;
+
+const SITE_TIME_MAP = {
   facebook: {
     url: '*://*.facebook.com/*',
-    time: 10000
+    time: 2.5 * MINUTES
   },
   youtube: {
     url: '*://*.youtube.com/*',
-    time: 20000
+    time: 10 * MINUTES
   }
 };
 
 const PERIOD = 1000;
 
-// TODO: Finish this! Would be super awesome!!!
+const STATE_COOKIE = 'STATE_COOKIE_FOO1234';
 
-const createInterval = (tabUrl) => {
-  const interval = setInterval(() => {
-    const currentDate = new Date().getTime();
-    const { origin } = document.location;
-    const originDateCookie = `${origin}/dateCookie`;
-    const spentTimeCookie = `${origin}/spentTime`;
+bakeCookie(STATE_COOKIE, JSON.stringify({ currentDay: new Date().getUTCDay() }));
+let GIANT_STATE = JSON.parse(readCookie(STATE_COOKIE));
 
-    const lastDateCookie = readCookie(originDateCookie);
-    console.log('lastDateCookie', lastDateCookie);
+console.log('GIANT_STATE', GIANT_STATE);
 
-    // initial
-    if (!lastDateCookie) {
-      console.log('bake initial');
-      bakeCookie(spentTimeCookie, String(0));
-    } else {
-      const lastDate = new Date(lastDateCookie);
-      console.log('lastDate', lastDate);
+const setState = newStateProperties => {
+  const cookieState = readCookie(STATE_COOKIE);
 
-      if (lastDate.getUTCDay() != new Date().getUTCDay()) {
-        // new day, no blocking!
-        updateFilters([], true);
-      } else {
-        // TODO: progamatically get the domain name...
-        let key = 'facebook';
+  const currentState = cookieState ? JSON.parse(cookieState) : {};
 
-        if (tabUrl.includes('youtube')) {
-          key = 'youtube';
-        };
+  const newState = Object.keys(newStateProperties).length == 0
+    ? {}
+    : Object.assign(currentState, newStateProperties);
 
-        const lastSpentTime = Number(readCookie(spentTimeCookie));
-        const newSpentTime = lastSpentTime + PERIOD;
-
-        if (newSpentTime > ORIGIN_TIME_MAP[key].time) {
-          console.log('!!!block: ', ORIGIN_TIME_MAP[key].url);
-          updateFilters([ORIGIN_TIME_MAP[key].url]);
-        }
-        console.log('lastSpentTime', lastSpentTime);
-
-        bakeCookie(spentTimeCookie, String(newSpentTime));
-      }
-    }
-
-    bakeCookie(originDateCookie, currentDate);
-  }, PERIOD);
-
-  return interval;
+  console.log('newState', newState);
+  bakeCookie(STATE_COOKIE, JSON.stringify(newState));
 }
 
-const tabIdIntervalMap = {};
+const readState = () => {
+  return JSON.parse(readCookie(STATE_COOKIE));
+}
+
+let lastInterval;
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  console.log('tabId', tabId, 'tab.url', tab.url);
-  if (tab.url.includes("facebook") || tab.url.includes("youtube")) {
-    if (!tabIdIntervalMap[tabId]) {
-      tabIdIntervalMap[tabId] = createInterval(tab.url);
+  console.log('tab', tab);
+  clearInterval(lastInterval);
+
+  const tabUrl = tab.url;
+  console.log('tabUrl', tabUrl);
+
+  Object.keys(SITE_TIME_MAP).forEach(siteKey => {
+    if (tabUrl.includes(siteKey)) {
+      let state = readState();
+
+      const currentDay = new Date().getUTCDay()
+
+      if (state.currentDay != currentDay) {
+        // New day: inblock the sites
+        updateFilters([], true);
+        setState({ currentDay });
+      }
+
+      console.log('state', state);
+
+      if (!state[tabUrl]) {
+        setState({ [tabUrl]: { activeTime: 0 } });
+      } else {
+        let { activeTime } = state[tabUrl];
+
+        lastInterval = setInterval(() => {
+          activeTime += PERIOD;
+
+          console.log('activeTime', activeTime);
+
+          if (activeTime > SITE_TIME_MAP[siteKey].time) {
+            console.log('BLOCK!!!', tabUrl);
+            alert('Close this tab!');
+            updateFilters([SITE_TIME_MAP[siteKey].url]);
+          }
+
+          setState({ [tabUrl]: { activeTime }});
+        }, PERIOD)
+      }
     }
-  }
+  });
 });
 
 chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
-  console.log('remove tabId', tabId);
-  delete tabIdIntervalMap[tabId];
+  clearInterval(lastInterval);
 });
 
-updateFilters([], true);
+// Uncomment to unblock the sites
+// updateFilters([], true);
