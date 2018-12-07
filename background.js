@@ -79,7 +79,8 @@ const trackTime = tab => {
   console.log('tabUrl', tabUrl);
 
   Object.keys(SITE_TIME_MAP).forEach(siteKey => {
-    if (tabUrl.includes(siteKey)) {
+    // exception for udemyfacultylounge - a productive facebook group
+    if (tabUrl.includes(siteKey) && !tabUrl.includes('https://www.facebook.com/groups/udemyfacultylounge')) {
       let state = readState();
 
       const currentDay = new Date().getDay()
