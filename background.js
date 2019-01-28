@@ -30,14 +30,21 @@ const updateFilters = (urls, clear = false) => {
 const SECONDS = 1000;
 const MINUTES = 60 * SECONDS;
 
+// const SITE_TIME_MAP = {
+//   facebook: {
+//     url: '*://*.facebook.com/*',
+//     time: 2.5 * MINUTES
+//   },
+//   youtube: {
+//     url: '*://*.youtube.com/*',
+//     time: 10 * MINUTES
+//   }
+// };
+
 const SITE_TIME_MAP = {
   facebook: {
     url: '*://*.facebook.com/*',
     time: 2.5 * MINUTES
-  },
-  youtube: {
-    url: '*://*.youtube.com/*',
-    time: 10 * MINUTES
   }
 };
 
